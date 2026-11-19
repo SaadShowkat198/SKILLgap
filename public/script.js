@@ -508,10 +508,10 @@ async function sendChatMessage() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
-        const response = await fetch('http://127.0.0.1:5000/chat', {
+        const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: messageText }),
@@ -536,7 +536,9 @@ async function sendChatMessage() {
         if (loadingElement) loadingElement.remove();
         const reason = err.name === 'AbortError'
             ? 'The AI request timed out. Please try again.'
-            : 'Failed to connect to the AI service. Make sure api.py is running on port 5000.';
+            : (err && err.message && err.message !== 'Failed to fetch'
+                ? err.message
+                : 'Could not reach the AI service. Please try again.');
         chatContainer.innerHTML += `<div style="margin-bottom: 12px; color: #991b1b;">${escapeHTML(reason)}</div>`;
     } finally {
         clearTimeout(timeoutId);
