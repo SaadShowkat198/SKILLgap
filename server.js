@@ -17,14 +17,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 // AI CAREER COACH (HOSTED GEMINI + LOCAL OLLAMA)
 // ==========================================
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const GEMINI_THINKING_LEVEL = (process.env.GEMINI_THINKING_LEVEL || 'LOW').toUpperCase();
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 240000;
+const VALID_THINKING_LEVELS = new Set(['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'XHIGH']);
 const CAREER_COACH_SYSTEM_PROMPT =
     'You are an expert AI Career Coach for CS and IT students. Keep responses helpful, structured, and concise.';
 
-async function callGemini(prompt, { system = CAREER_COACH_SYSTEM_PROMPT, maxOutputTokens = 900, timeoutMs = 30000 } = {}) {
+async function callGemini(prompt, { system = CAREER_COACH_SYSTEM_PROMPT, maxOutputTokens = 2048, timeoutMs = GEMINI_TIMEOUT_MS } = {}) {
+    const generationConfig = { temperature: 0.7, maxOutputTokens };
+    if (VALID_THINKING_LEVELS.has(GEMINI_THINKING_LEVEL)) {
+        generationConfig.thinkingConfig = { thinkingLevel: GEMINI_THINKING_LEVEL };
+    }
+
     const payload = {
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens }
+        generationConfig
     };
     if (system) {
         payload.systemInstruction = { parts: [{ text: system }] };

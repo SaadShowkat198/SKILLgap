@@ -508,7 +508,7 @@ async function sendChatMessage() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 240000);
 
     try {
         const response = await fetch('/api/chat', {
