@@ -474,6 +474,19 @@ function renderAssessmentResults() {
         })
     }).catch(err => console.error("Error saving assessment:", err));
 
+    // Persist the result in Supabase for logged-in users (RLS allows own rows only).
+    if (typeof supabaseClient !== 'undefined' && supabaseClient &&
+        typeof currentUser !== 'undefined' && currentUser && currentUser.id) {
+        supabaseClient.from('assessments').insert({
+            user_id: currentUser.id,
+            subject: subjectName,
+            score: percentage,
+            lacking_gaps: lackingGaps
+        }).then(({ error }) => {
+            if (error) console.error("Error saving assessment to Supabase:", error.message);
+        });
+    }
+
     // If gaps exist, ask the AI agent for study recommendations and real links.
     if (lackingGaps.length > 0) {
         fetch('/api/analyze-skills', {

@@ -418,7 +418,28 @@ function validateAuthInputs(name, email, password, confirmPassword, role) {
     return true;
 }
 
-function handleSignUp() {
+function mapAuthUser(user) {
+    if (!user) return null;
+
+    const metadata = user.user_metadata || {};
+    const email = user.email || '';
+    const name = String(metadata.full_name || email.split('@')[0] || 'User').trim();
+
+    return {
+        id: user.id,
+        name,
+        email,
+        role: metadata.role === 'jobseeker' ? 'jobseeker' : 'student'
+    };
+}
+
+function setButtonBusy(button, busy, busyText, idleText) {
+    if (!button) return;
+    button.disabled = busy;
+    button.innerText = busy ? busyText : idleText;
+}
+
+async function handleSignUp() {
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     // Trim accidental leading/trailing spaces so invisible whitespace cannot cause a false mismatch.
@@ -430,60 +451,149 @@ function handleSignUp() {
         return;
     }
 
-    currentUser = { name, email, role };
-    updateUIAfterAuth();
-    closeAuthModal();
+    if (!supabaseClient) {
+        alert('Account service is unavailable right now. Please refresh the page and try again.');
+        return;
+    }
 
-    if (role === 'student') {
-        showWindow('window-student');
-    } else {
-        showWindow('window-jobseeker');
+    const submitBtn = document.querySelector('#form-signup .btn-primary');
+    setButtonBusy(submitBtn, true, 'Creating account...', 'Create Account');
+
+    try {
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { data: { full_name: name, role } }
+        });
+
+        if (error) {
+            alert(`Sign up failed: ${error.message}`);
+            return;
+        }
+
+        // If email confirmation is enabled, there is no session yet.
+        if (!data.session) {
+            const loginEmail = document.getElementById('login-email');
+            if (loginEmail) loginEmail.value = email;
+            switchAuthTab('login');
+            alert('Account created! Please confirm your email address, then log in.');
+            return;
+        }
+
+        currentUser = mapAuthUser(data.user);
+        updateUIAfterAuth();
+        closeAuthModal();
+        showWindow(currentUser.role === 'student' ? 'window-student' : 'window-jobseeker');
+    } catch (error) {
+        console.error('Sign up error:', error);
+        alert('Sign up failed: could not reach the account service. Please try again.');
+    } finally {
+        setButtonBusy(submitBtn, false, '', 'Create Account');
     }
 }
 
-function handleLogin() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim().normalize('NFC');
 
     if (!validateAuthInputs(null, email, password, undefined, null)) {
         return;
     }
 
-    const detectedRole = email.includes('.edu') ? 'student' : 'student';
+    if (!supabaseClient) {
+        alert('Account service is unavailable right now. Please refresh the page and try again.');
+        return;
+    }
 
-    currentUser = { name: 'User', email: email, role: detectedRole };
-    updateUIAfterAuth();
-    closeAuthModal();
-    showWindow('window-student');
+    const submitBtn = document.querySelector('#form-login .btn-primary');
+    setButtonBusy(submitBtn, true, 'Logging in...', 'Log In');
+
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            const message = /invalid login credentials/i.test(error.message)
+                ? 'Incorrect email or password.'
+                : error.message;
+            alert(`Login failed: ${message}`);
+            return;
+        }
+
+        currentUser = mapAuthUser(data.user);
+        updateUIAfterAuth();
+        closeAuthModal();
+        showWindow(currentUser.role === 'student' ? 'window-student' : 'window-jobseeker');
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed: could not reach the account service. Please try again.');
+    } finally {
+        setButtonBusy(submitBtn, false, '', 'Log In');
+    }
 }
 
-function handleLogout() {
+async function handleLogout() {
+    if (supabaseClient) {
+        try {
+            await supabaseClient.auth.signOut();
+        } catch (error) {
+            console.warn('Logout request failed:', error);
+        }
+    }
+
     currentUser = null;
-    document.getElementById('btn-login-nav').classList.remove('hidden');
-    document.getElementById('btn-signup-nav').classList.remove('hidden');
-    document.getElementById('btn-logout-nav').classList.add('hidden');
-
-    document.getElementById('nav-student').classList.remove('hidden');
-    document.getElementById('nav-jobseeker').classList.remove('hidden');
-
+    updateUIAfterAuth();
     showWindow('window-home');
 }
 
 function updateUIAfterAuth() {
-    if (currentUser) {
-        document.getElementById('btn-login-nav').classList.add('hidden');
-        document.getElementById('btn-signup-nav').classList.add('hidden');
-        document.getElementById('btn-logout-nav').classList.remove('hidden');
+    const loggedIn = Boolean(currentUser);
 
-        if (currentUser.role === 'student') {
-            document.getElementById('nav-jobseeker').classList.add('hidden');
-            document.getElementById('nav-student').classList.remove('hidden');
-        } else if (currentUser.role === 'jobseeker') {
-            document.getElementById('nav-student').classList.add('hidden');
-            document.getElementById('nav-jobseeker').classList.remove('hidden');
-        }
+    document.getElementById('btn-login-nav').classList.toggle('hidden', loggedIn);
+    document.getElementById('btn-signup-nav').classList.toggle('hidden', loggedIn);
+    document.getElementById('btn-logout-nav').classList.toggle('hidden', !loggedIn);
+
+    const studentNav = document.getElementById('nav-student');
+    const jobseekerNav = document.getElementById('nav-jobseeker');
+
+    if (!loggedIn) {
+        studentNav.classList.remove('hidden');
+        jobseekerNav.classList.remove('hidden');
+        return;
+    }
+
+    if (currentUser.role === 'jobseeker') {
+        studentNav.classList.add('hidden');
+        jobseekerNav.classList.remove('hidden');
+    } else {
+        jobseekerNav.classList.add('hidden');
+        studentNav.classList.remove('hidden');
     }
 }
+
+async function initAuthSession() {
+    if (!supabaseClient) return;
+
+    try {
+        const { data } = await supabaseClient.auth.getSession();
+        if (data.session) {
+            currentUser = mapAuthUser(data.session.user);
+            updateUIAfterAuth();
+        }
+    } catch (error) {
+        console.warn('Could not restore the previous session:', error);
+    }
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+            currentUser = null;
+        } else {
+            currentUser = mapAuthUser(session.user);
+        }
+        updateUIAfterAuth();
+    });
+}
+
+initAuthSession();
 
 // ==========================================
 // 9. AI CAREER COACH CHAT INTEGRATION
