@@ -14,11 +14,11 @@ const modalsHTML = `
         <div id="form-login">
             <div style="margin-bottom: 12px;">
                 <label style="font-size: 12px; font-weight: bold; color: #064e3b;">Email Address</label>
-                <input type="email" id="login-email" placeholder="e.g. user@example.com or name@edu.bd" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="email" id="login-email" placeholder="e.g. user@example.com or name@edu.bd" autocomplete="email" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
             </div>
             <div style="margin-bottom: 16px;">
                 <label style="font-size: 12px; font-weight: bold; color: #064e3b;">Password</label>
-                <input type="password" id="login-password" placeholder="Enter your password" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
             </div>
             <button class="btn-primary" style="width: 100%;" onclick="handleLogin()">Log In</button>
         </div>
@@ -27,7 +27,7 @@ const modalsHTML = `
         <div id="form-signup" class="hidden">
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #064e3b;">Full Name (Letters only)</label>
-                <input type="text" id="signup-name" placeholder="John Doe" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="text" id="signup-name" placeholder="John Doe" autocomplete="name" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
             </div>
             
             <div style="margin-bottom: 10px;">
@@ -40,7 +40,7 @@ const modalsHTML = `
 
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #064e3b;">Email Address</label>
-                <input type="email" id="signup-email" placeholder="e.g. name@edu.bd or student@university.edu" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="email" id="signup-email" placeholder="e.g. name@edu.bd or student@university.edu" autocomplete="email" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
                 <span id="email-hint" style="font-size: 11px; color: #059669;">Graduate students can use personal or institutional (.edu, .edu.bd) emails.</span>
             </div>
 

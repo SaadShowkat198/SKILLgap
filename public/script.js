@@ -327,6 +327,23 @@ function openAuthModal(mode) {
 
 function closeAuthModal() {
     document.getElementById('modal-auth').classList.add('hidden');
+    clearAuthPasswordFields();
+}
+
+function clearAuthPasswordFields() {
+    ['login-password', 'signup-password', 'signup-confirm-password'].forEach((id) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+
+        input.value = '';
+
+        // Reset show/hide toggles back to hidden.
+        if (input.type === 'text') {
+            input.type = 'password';
+            const button = input.parentElement ? input.parentElement.querySelector('button') : null;
+            if (button) button.innerText = '👁️';
+        }
+    });
 }
 
 function switchAuthTab(tab) {
@@ -475,6 +492,7 @@ async function handleSignUp() {
         if (!data.session) {
             const loginEmail = document.getElementById('login-email');
             if (loginEmail) loginEmail.value = email;
+            clearAuthPasswordFields();
             switchAuthTab('login');
             alert('Account created! Please confirm your email address, then log in.');
             return;
@@ -512,6 +530,21 @@ async function handleLogin() {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
+            if (/email not confirmed/i.test(error.message)) {
+                const resend = window.confirm('This email has not been confirmed yet. Resend the confirmation email?');
+                if (resend) {
+                    try {
+                        const { error: resendError } = await supabaseClient.auth.resend({ type: 'signup', email });
+                        alert(resendError
+                            ? `Could not resend the email: ${resendError.message}`
+                            : 'Confirmation email sent. Check your inbox (and spam folder).');
+                    } catch (resendError) {
+                        alert('Could not resend the confirmation email. Please try again in a moment.');
+                    }
+                }
+                return;
+            }
+
             const message = /invalid login credentials/i.test(error.message)
                 ? 'Incorrect email or password.'
                 : error.message;
@@ -551,6 +584,12 @@ function updateUIAfterAuth() {
     document.getElementById('btn-login-nav').classList.toggle('hidden', loggedIn);
     document.getElementById('btn-signup-nav').classList.toggle('hidden', loggedIn);
     document.getElementById('btn-logout-nav').classList.toggle('hidden', !loggedIn);
+
+    const greeting = document.getElementById('nav-user-greeting');
+    if (greeting) {
+        greeting.classList.toggle('hidden', !loggedIn);
+        greeting.innerText = loggedIn ? `Hi, ${currentUser.name.split(' ')[0]}` : '';
+    }
 
     const studentNav = document.getElementById('nav-student');
     const jobseekerNav = document.getElementById('nav-jobseeker');
