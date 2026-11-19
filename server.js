@@ -17,9 +17,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // AI CAREER COACH (HOSTED GEMINI + LOCAL OLLAMA)
 // ==========================================
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const GEMINI_THINKING_LEVEL = (process.env.GEMINI_THINKING_LEVEL || 'LOW').toUpperCase();
-const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 240000;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+const GEMINI_THINKING_LEVEL = (process.env.GEMINI_THINKING_LEVEL || 'MINIMAL').toUpperCase();
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 60000;
 const VALID_THINKING_LEVELS = new Set(['MINIMAL', 'LOW', 'MEDIUM', 'HIGH', 'XHIGH']);
 const CAREER_COACH_SYSTEM_PROMPT =
     'You are an expert AI Career Coach for CS and IT students. Keep responses helpful, structured, and concise.';
