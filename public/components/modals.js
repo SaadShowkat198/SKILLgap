@@ -46,12 +46,18 @@ const modalsHTML = `
 
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #064e3b;">Password (Min. 6 characters)</label>
-                <input type="password" id="signup-password" placeholder="Create password" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <div style="position: relative; margin-top: 4px;">
+                    <input type="password" id="signup-password" placeholder="Create password" autocomplete="new-password" spellcheck="false" style="width: 100%; padding: 10px 42px 10px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <button type="button" onclick="togglePasswordVisibility('signup-password', this)" title="Show/hide password" aria-label="Show password" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 4px;">👁️</button>
+                </div>
             </div>
 
             <div style="margin-bottom: 16px;">
                 <label style="font-size: 12px; font-weight: bold; color: #064e3b;">Confirm Password</label>
-                <input type="password" id="signup-confirm-password" placeholder="Re-enter password" style="width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <div style="position: relative; margin-top: 4px;">
+                    <input type="password" id="signup-confirm-password" placeholder="Re-enter password" autocomplete="new-password" spellcheck="false" style="width: 100%; padding: 10px 42px 10px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <button type="button" onclick="togglePasswordVisibility('signup-confirm-password', this)" title="Show/hide password" aria-label="Show password" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; line-height: 1; padding: 4px;">👁️</button>
+                </div>
             </div>
 
             <button class="btn-primary" style="width: 100%;" onclick="handleSignUp()">Create Account</button>

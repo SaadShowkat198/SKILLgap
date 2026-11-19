@@ -357,6 +357,18 @@ function updateEmailPlaceholder() {
     }
 }
 
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    if (button) {
+        button.innerText = show ? '🙈' : '👁️';
+        button.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    }
+}
+
 function validateAuthInputs(name, email, password, confirmPassword, role) {
     if (name !== null) {
         const nameRegex = /^[A-Za-z\s]+$/;
@@ -398,7 +410,7 @@ function validateAuthInputs(name, email, password, confirmPassword, role) {
             return false;
         }
         if (confirmPassword !== undefined && password !== confirmPassword) {
-            alert('Validation Error: Password and Confirm Password do not match.');
+            alert('Validation Error: Password and Confirm Password do not match.\n\nTip: check for accidental spaces, Caps Lock, or a different keyboard layout. Use the 👁️ button to see what you typed.');
             return false;
         }
     }
@@ -407,10 +419,11 @@ function validateAuthInputs(name, email, password, confirmPassword, role) {
 }
 
 function handleSignUp() {
-    const name = document.getElementById('signup-name').value;
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    const confirmPassword = document.getElementById('signup-confirm-password').value;
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    // Trim accidental leading/trailing spaces so invisible whitespace cannot cause a false mismatch.
+    const password = document.getElementById('signup-password').value.trim().normalize('NFC');
+    const confirmPassword = document.getElementById('signup-confirm-password').value.trim().normalize('NFC');
     const role = document.getElementById('signup-role').value;
 
     if (!validateAuthInputs(name, email, password, confirmPassword, role)) {
